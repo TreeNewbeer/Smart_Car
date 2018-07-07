@@ -1,0 +1,242 @@
+C51 COMPILER V9.54   MAIN                                                                  04/29/2018 19:15:19 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keilv5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Inc) DEBUG OBJECTEXTEND PRINT(.\
+                    -Listings\main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include  <STC15F2K60S2.H>
+   2          #include  "api.h"
+   3          #include  "nrf24l01.h"
+   4          #include  "uart.h"
+   5          #include  "delay.h"
+   6          #include  "oled12864.h"
+   7          
+   8          
+   9          sbit KEY1 = P5^0;
+  10          sbit KEY2 = P5^1;
+  11          sbit KEY3 = P4^5;
+  12          sbit KEY4 = P4^0;
+  13          //sbit KEY5 = P2^6;
+  14          sbit LED  = P5^5;
+  15          unsigned char TX_BUF[TX_PLOAD_WIDTH];
+  16          
+  17          void GPIO_Init(void)
+  18          {
+  19   1              P1M0 = 0;                P1M1 = 0;
+  20   1              P2M0 = 0;                P2M1 = 0;
+  21   1              P3M0 = 0;                P3M1 = 0;
+  22   1              P4M0 = 0;                P4M1 = 0;
+  23   1              P5M0 = 0;                P5M1 = 0;
+  24   1      }
+  25          
+  26          void OLED_Init(void)
+  27          {
+  28   1                  LCD_CS= 0;
+  29   1                        LCD_Init();                   
+  30   1                        LCD_Fill(0xff); 
+  31   1                              delay_ms(100); 
+  32   1                        LCD_Fill(0x00);
+  33   1                              delay_ms(100);     
+  34   1                        LCD_CLS();
+  35   1                        delay_ms(100);  
+  36   1                              delay_ms(1);
+  37   1      }       
+  38          
+  39          
+  40          
+  41          
+  42          void KeyScan(void)
+  43          {
+  44   1              
+  45   1              if(!KEY1)                              //如果检测到低电平，说明按键按下
+  46   1              {
+  47   2                      delay_ms(20);                       //延时去抖，一般10-20ms
+  48   2                      if(!KEY1)                         //再次确认按键是否按下，没有按下则退出
+  49   2                      {
+  50   3                              LED = 0;
+  51   3                              while(!KEY1);         
+  52   3                              //如果确认按下按键等待按键释放，没有则退出
+  53   3                              {
+  54   4                                      LCD_Fill(0x00);
+C51 COMPILER V9.54   MAIN                                                                  04/29/2018 19:15:19 PAGE 2   
+
+  55   4                                      TX_BUF[0] = 1;            //向左转
+  56   4                                      TX_BUF[1] = 0;
+  57   4                                      TX_BUF[2] = 0;
+  58   4                                      TX_BUF[3] = 1;
+  59   4                                      TX_BUF[4] = 0x11;
+  60   4                                      TX_BUF[5] = 0x11;
+  61   4                                      TX_Mode(TX_BUF);  //发送数据
+  62   4                                      delay_ms(50);
+  63   4                      //              SPI_RW_Reg(WRITE_REG+STATUS,0xff); // 清除TX_DS或MAX_RT中断标志
+  64   4                                              while(Check_ACK());      //检测是否发送完毕
+  65   4                      //              SPI_RW(FLUSH_TX);//用于清空FIFO
+  66   4                                      SendString("左转\n");   
+  67   4                                      LCD_P6x8Str(15,1,"Smart Flying Car");
+  68   4                                      LCD_P6x8Str(15,8,"Smart Flying Car");
+  69   4                                      LCD_P6x8Str(20,4,"Current State:");
+  70   4                                      LCD_P6x8Str(30,5,"Turn Left");  
+  71   4                                      SendString("Waiting for commend:......\n");                     
+  72   4                                      LED = 1;
+  73   4                              //      SPI_RW_Reg(WRITE_REG+STATUS,0xff); //清除状态寄存器
+  74   4                              }
+  75   3                      }
+  76   2              }
+  77   1      
+  78   1              else if(!KEY2)                                //如果检测到低电平，说明按键按下
+  79   1              {
+  80   2                      delay_ms(20);                              //延时去抖，一般10-20ms
+  81   2                      if(!KEY2)                                //再次确认按键是否按下，没有按下则退出
+  82   2                      {
+  83   3                              LED = 0;
+  84   3                              while(!KEY2);                        //如果确认按下按键等待按键释放，没有则退出
+  85   3                              {
+  86   4                                      LCD_Fill(0x00);
+  87   4                                      TX_BUF[0] = 0;                   //向右转
+  88   4                                      TX_BUF[1] = 1;
+  89   4                                      TX_BUF[2] = 1;
+  90   4                                      TX_BUF[3] = 0;
+  91   4                                      TX_BUF[4] = 0x22;
+  92   4                                      TX_BUF[5] = 0x22;
+  93   4                                      TX_Mode(TX_BUF);        //发送数据
+  94   4                                      delay_ms(50);
+  95   4                              //      SPI_RW_Reg(WRITE_REG+STATUS,0xff); // 清除TX_DS或MAX_RT中断标志
+  96   4                                      while(Check_ACK());      //检测是否发送完毕
+  97   4                              //      SPI_RW(FLUSH_TX);//用于清空FIFO
+  98   4                                      SendString("右转\n");
+  99   4                                      LCD_P6x8Str(15,1,"Smart Flying Car");
+ 100   4                                      LCD_P6x8Str(15,8,"Smart Flying Car");
+ 101   4                                      LCD_P6x8Str(20,4,"Current State:");
+ 102   4                                      LCD_P6x8Str(30,5,"Turn Right");
+ 103   4                                      SendString("Waiting for commend:......\n");
+ 104   4                                      LED = 1;
+ 105   4                              //      SPI_RW_Reg(WRITE_REG+STATUS,0xff); //清除状态寄存器
+ 106   4                              }
+ 107   3                      }
+ 108   2              }
+ 109   1              
+ 110   1              else if(!KEY3)                             //如果检测到低电平，说明按键按下
+ 111   1              {  
+ 112   2                      delay_ms(20);                           //延时去抖，一般10-20ms
+ 113   2                      if(!KEY3)                             //再次确认按键是否按下，没有按下则退出
+ 114   2                      {
+ 115   3                              LED = 0;
+ 116   3                              while(!KEY3);                     //如果确认按下按键等待按键释放，没有则退出
+C51 COMPILER V9.54   MAIN                                                                  04/29/2018 19:15:19 PAGE 3   
+
+ 117   3                              {
+ 118   4                                      LCD_Fill(0x00);
+ 119   4                                      TX_BUF[0] = 1;                //前进
+ 120   4                                      TX_BUF[1] = 0;
+ 121   4                                      TX_BUF[2] = 1;
+ 122   4                                      TX_BUF[3] = 0;
+ 123   4                                      TX_BUF[4] = 0x33;
+ 124   4                                      TX_BUF[5] = 0x33;
+ 125   4                                      TX_Mode(TX_BUF);     //发送数据
+ 126   4                                      delay_ms(50);
+ 127   4                              //      SPI_RW_Reg(WRITE_REG+STATUS,0xff); // 清除TX_DS或MAX_RT中断标志
+ 128   4                                              while(Check_ACK());      //检测是否发送完毕
+ 129   4                              //      SPI_RW(FLUSH_TX);//用于清空FIFO
+ 130   4                                      SendString("前进\n");
+ 131   4                                      SendString("Waiting for commend:......\n");
+ 132   4                                      LCD_P6x8Str(15,1,"Smart Flying Car");
+ 133   4                                      LCD_P6x8Str(15,8,"Smart Flying Car");
+ 134   4                                      LCD_P6x8Str(20,4,"Current State:");
+ 135   4                                      LCD_P6x8Str(30,5,"Go Back");
+ 136   4                                      LED = 1;
+ 137   4                      //              SPI_RW_Reg(WRITE_REG+STATUS,0xff); //清除状态寄存器
+ 138   4                              }
+ 139   3                      }
+ 140   2              }
+ 141   1      
+ 142   1              else if(!KEY4)                            //如果检测到低电平，说明按键按下
+ 143   1              {
+ 144   2                      delay_ms(20);                           //延时去抖，一般10-20ms
+ 145   2                      if(!KEY4)                             //再次确认按键是否按下，没有按下则退出
+ 146   2                      {
+ 147   3                              LED = 0;
+ 148   3                              while(!KEY4);                      //如果确认按下按键等待按键释放，没有则退出
+ 149   3                              {
+ 150   4                                      LCD_Fill(0x00);
+ 151   4                                      TX_BUF[0] = 0;                                                //后退
+ 152   4                                      TX_BUF[1] = 1;
+ 153   4                                      TX_BUF[2] = 0;
+ 154   4                                      TX_BUF[3] = 1;
+ 155   4                                      TX_BUF[4] = 0x44;
+ 156   4                                      TX_BUF[5] = 0x44;
+ 157   4                                      TX_Mode(TX_BUF);        //发送数据
+ 158   4                                      delay_ms(50);
+ 159   4                                      //SPI_RW_Reg(WRITE_REG+STATUS,0xff); // 清除TX_DS或MAX_RT中断标志
+ 160   4                                      while(Check_ACK());      //检测是否发送完毕
+ 161   4                              //      SPI_RW(FLUSH_TX);//用于清空FIFO
+ 162   4                                      SendString("后退\n");
+ 163   4                                      SendString("Waiting for commend:......\n");
+ 164   4                                      LCD_P6x8Str(15,1,"Smart Flying Car");
+ 165   4                                      LCD_P6x8Str(15,8,"Smart Flying Car");
+ 166   4                                      LCD_P6x8Str(20,4,"Current State:");
+ 167   4                                      LCD_P6x8Str(30,5,"Go Ahead");
+ 168   4                                      LED = 1;
+ 169   4                              //      SPI_RW_Reg(WRITE_REG+STATUS,0xff); //清除状态寄存器
+ 170   4                              }
+ 171   3      
+ 172   3                      }
+ 173   2              }
+ 174   1              else
+ 175   1              {
+ 176   2                      //LCD_Fill(0x00);
+ 177   2                      TX_BUF[0] = 1;                                                //刹车
+ 178   2                      TX_BUF[1] = 1;
+C51 COMPILER V9.54   MAIN                                                                  04/29/2018 19:15:19 PAGE 4   
+
+ 179   2                      TX_BUF[2] = 1;
+ 180   2                      TX_BUF[3] = 1;
+ 181   2                      TX_BUF[4] = 0x55;
+ 182   2                      TX_BUF[5] = 0x55;
+ 183   2                      TX_Mode(TX_BUF);        //发送数据
+ 184   2                      delay_ms(50);
+ 185   2                      while(Check_ACK());      //检测是否发送完毕
+ 186   2                      LCD_P6x8Str(15,1,"Smart Flying Car");
+ 187   2                      LCD_P6x8Str(15,7,"Smart Flying Car");
+ 188   2      //              LCD_P6x8Str(10,4,"Current State:");
+ 189   2      //              LCD_P6x8Str(20,5,"Go Back");
+ 190   2              }
+ 191   1      
+ 192   1      }
+ 193          
+ 194          
+ 195            
+ 196          void main (void)
+ 197          {
+ 198   1              GPIO_Init();
+ 199   1              UartInit();
+ 200   1              OLED_Init();
+ 201   1              delay_ms(200);
+ 202   1              SendString("Waiting for commend:......\n");
+ 203   1              LCD_P6x8Str(15,1,"Smart Flying Car");
+ 204   1              LCD_P6x8Str(15,8,"Smart Flying Car");
+ 205   1              while(1)
+ 206   1              {
+ 207   2                      LED =1;
+ 208   2                      SPI_RW_Reg(WRITE_REG+STATUS,0xff); 
+ 209   2                      KeyScan();
+ 210   2              }
+ 211   1      }
+ 212          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    701    ----
+   CONSTANT SIZE    =    122    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      6    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

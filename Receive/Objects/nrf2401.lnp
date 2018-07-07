@@ -1,0 +1,3 @@
+".\Objects\main.obj" 
+TO ".\Objects\nrf2401" 
+PRINT(".\Listings\nrf2401.m51") RAMSIZE(256) 

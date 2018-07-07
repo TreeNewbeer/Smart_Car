@@ -1,0 +1,7 @@
+".\Objects\main.obj",
+".\Objects\uart.obj",
+".\Objects\nrf24l01.obj",
+".\Objects\delay.obj",
+".\Objects\oled12864.obj" 
+TO ".\Objects\TXD" 
+PRINT(".\Listings\TXD.m51") RAMSIZE(256) 
